@@ -1,98 +1,80 @@
-from Pokemon import Pokemon
-from SuperHero import SuperHero
-from Weather import Weather
+import requests
 
-class Main:
-    def _init_(self):
-        self.pokemon_service = Pokemon()
-        self.hero_service = SuperHero()
-        self.weather_service = Weather()
+print("----")
 
-    def menu(self):
-        print("-" * 50)
-        print("WEB SERVICE INFORMATION CENTER")
-        print("-" * 50)
-        print()
+pokemon_name = input("Pokemon favorito: ")
+hero_name = input("Heroe favorito: ")
+city_name = input("Ciudad: ")
 
-        # Input
-        favorite_pokemon = input("Enter your favorite Pokemon: ").strip().lower()
-        favorite_hero = input("Enter your favorite Super Hero: ").strip()
-        city = input("Enter your city of residence: ").strip()
+print("\n--- RESULTADOS ---\n")
 
-        print("\n" + "-" * 50)
-        print("INFORMATION...")
-        print("-" * 50)
+# POKEMON
+try:
+    url = f"https://pokeapi.co/api/v2/pokemon/{pokemon_name.lower()}"
+    res = requests.get(url)
 
-        # Pokemon
-        print("-" * 40)
-        print("POKEMON INFORMATION")
-        print("-" * 40)
-        self._get_pokemon_info(favorite_pokemon)
+    if res.status_code == 200:
+        data = res.json()
 
-        print()
+        print("=== POKEMON ===")
+        print(f"Nombre: {data['name']}")
+        print(f"Altura: {data['height']}")
+        print(f"Peso: {data['weight']}")
 
-        # Super Hero
-        print("-" * 40)
-        print("SUPER HERO INFORMATION")
-        print("-" * 40)
-        self._get_hero_info(favorite_hero)
+        # imagen
+        img_url = data['sprites']['front_default']
+        print(f"Imagen: {img_url}")
 
-        print()
+        img = requests.get(img_url)
+        with open(f"{pokemon_name}.png", "wb") as f:
+            f.write(img.content)
 
-        # Weather
-        print("-" * 40)
-        print("WEATHER INFORMATION")
-        print("-" * 40)
-        self._get_weather_info(city)
+        print("Imagen descargada ✔")
+    else:
+        print("   Pokemon no encontrado")
+
+except:
+    print(" Pokemon error")
 
 
-    def _get_pokemon_info(self, pokemon_name):
-        try:
-            if not pokemon_name:
-                print("Error: No Pokemon name provided.")
-                return
+print("\n")
 
-            # This now prints info AND returns the sprite URL
-            sprite_url = self.pokemon_service.get_pokemon(pokemon_name)
+# HEROE
+try:
+    url = f"https://superheroapi.com/api/7252591128153666/search/{hero_name}"
+    res = requests.get(url)
+    data = res.json()
 
-            if sprite_url:
-                file_name = f"{pokemon_name}.png"
-                self.pokemon_service.get_image(sprite_url, file_name)
-            else:
-                print(f"Error: Could not retrieve data for '{pokemon_name}'")
+    if data["response"] == "success":
+        h = data["results"][0]
 
-        except Exception as e:
-            print(f"Error fetching Pokemon information: {e}")
+        print("=== HEROE ===")
+        print(f"Nombre: {h['name']}")
+        print(f"Inteligencia: {h['powerstats']['intelligence']}")
+        print(f"Fuerza: {h['powerstats']['strength']}")
+        print(f"Velocidad: {h['powerstats']['speed']}")
+    else:
+        print("❌ Heroe no encontrado")
 
-
-    def _get_hero_info(self, hero_name):
-        try:
-            if not hero_name:
-                print("Error: No hero name provided.")
-                return
-
-            result = self.hero_service.get_heroes(hero_name)
-
-            if result is None:
-                print(f"Could not retrieve data for '{hero_name}'")
-
-        except Exception as e:
-            print(f"Error fetching hero information: {e}")
+except:
+    print("❌ Heroe error")
 
 
-    def _get_weather_info(self, city):
-        try:
-            if not city:
-                print("Error: No city provided.")
-                return
-            
-            result = self.weather_service.get_weather(city)
-            if not result:
-                print(f"Could not retrieve weather data for '{city}'")
+print("\n")
 
-        except Exception as e:
-            print(f"Error fetching weather information: {e}")
+# CLIMA
+try:
+    url = f"https://wttr.in/{city_name}?format=j1"
+    res = requests.get(url)
+    data = res.json()
 
-if __name__ == "_main_":
-    app = Main()
-    app.menu()
+    temp = data["current_condition"][0]["temp_C"]
+    desc = data["current_condition"][0]["weatherDesc"][0]["value"]
+
+    print("=== CLIMA ===")
+    print(f"Ciudad: {city_name}")
+    print(f"Temperatura: {temp}°C")
+    print(f"Clima: {desc}")
+
+except:
+    print(" Ciudad no encontrada")
